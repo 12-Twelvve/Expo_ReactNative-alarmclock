@@ -3,6 +3,8 @@ import React, {useState, useEffect} from 'react'
 import { AntDesign } from '@expo/vector-icons';
 import { country } from './assests/country';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+// import { Moment } from 'moment';
+var moment = require('moment-timezone');
 
 
 export default function HomeScreen({ navigation }) {
@@ -13,16 +15,17 @@ export default function HomeScreen({ navigation }) {
     const [localMinute, setLocalMinute] = useState("00");
 
     const handleZoneSelect =async(zone)=>{
+        console.log(zone.Id)
         setModalVisible(false)
-        const clocksStorage = await AsyncStorage.getItem('clocks')
-        if (clocksStorage != null){
-          setClockZones(clocksStorage)
-          setClockZones([...zone])
-        }else{
-          setClockZones([zone])
-        }
-        console.log(clockZones)
-        await AsyncStorage.setItem('clocks', JSON.stringify(clocksStorage))
+        // const clocksStorage = await AsyncStorage.getItem('clocks')
+        // if (clocksStorage != null){
+        //   setClockZones(clocksStorage)
+        //   setClockZones([...zone])
+        // }else{
+        // }
+        setClockZones([...clockZones, zone.Id])
+ 
+        // await AsyncStorage.setItem('clocks', JSON.stringify(clocksStorage))
     }
 
     const prompDelete =()=>{
@@ -59,20 +62,17 @@ export default function HomeScreen({ navigation }) {
         );
       };
 
-    const renderWorldClocks = ({ clockZone }) => {  
-        const d = new Date();
-        console.log(clockZone)
-        const time = d.toLocaleTimeString("en-US", 
-        {timeZone: clockZone, hour12: false,
-          hour: '2-digit',
-          minute: '2-digit'
-        });
+    const renderWorldClocks = ({ item }) => {  
+        // const d = new Date();
+        console.log(clockZones)
+        const time = moment().tz(item).format("hh:mm")
         console.log(time)
-        getSaveWorldClock()
+        console.log("zn"+ item)
+        // getSaveWorldClock()
         return (
           <Worldclock
             clock={time}
-            id={clockZone}
+            id={item}
             onLongPress={(e)=>prompDelete(clock)}
           />
         );
@@ -82,7 +82,7 @@ export default function HomeScreen({ navigation }) {
             <FlatList
             data={clockZones}
             renderItem={renderWorldClocks}
-            keyExtractor={(clockZone) => clockZone}
+            keyExtractor={(item) => item}
         />
         );
       };
@@ -94,7 +94,7 @@ export default function HomeScreen({ navigation }) {
               <Text style={Styles.worldClockText}>{ clock }</Text>
           </View>
           <Text style={Styles.wctext}>
-              {id}
+              {id}h
           </Text>
         </View>
       </TouchableOpacity>
@@ -107,11 +107,10 @@ export default function HomeScreen({ navigation }) {
     useEffect(()=>{
       const interval = setInterval(() => {
         const d =new Date()
-
         setLocalHour((d.getHours()).toString().padStart(2, "0"))
         setLocalMinute((d.getMinutes()).toString().padStart(2, "0"))
+        // worldClockList()
       }, 1000);
-      // worldClockList()
       // clearAllData()
     }, [])
 
