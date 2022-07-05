@@ -1,49 +1,133 @@
-import { View, Text, StyleSheet, Modal , Pressable} from 'react-native'
-import React, { useState } from 'react'
+import { View, Text, StyleSheet, Modal , Pressable, FlatList, TouchableOpacity} from 'react-native'
+import React, { useEffect, useState } from 'react'
 import { Styles } from './HomeScreen'
 import { AntDesign } from '@expo/vector-icons';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from 'moment';
-
-import ReactNativeAN from 'react-native-alarm-notification';
+import {Switch} from '@rneui/themed'
+import storage from './Storage';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+// import ReactNativeAN from 'react-native-alarm-notification';
 
 export default function Alarm() {
-
+  const [isEnabled, setIsEnabled] = useState(false);
+  const [alarms, setAlarms] = useState([])
   const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
   const showTimePicker = () => {
     setTimePickerVisibility(true);
   };
   const hideTimePicker = () => {
     setTimePickerVisibility(false);
-  };
+  };  
   const alarmNotifData = {
     title: "Alarm",
     message: "wake up",
+    channel: "my_channel_id",
+	  small_icon: "ic_launcher",
+    color:"red",
+
   };
-  
-  const handleConfirm = (datee) => {
+  const getSaveAlarms =()=>{
+    storage.load({
+      key: 'alarms',
+      autoSync: true,
+      syncInBackground: true,
+    })
+    .then(ret => {
+      setAlarms(ret.alarms)
+    })
+    .catch(err => {
+      console.warn(err.message);
+    });
+}
+  const handleConfirm = async(date) => {
     hideTimePicker();
-    var newDate = moment(datee).add(1, 'd').toDate();
-    const fireDate = ReactNativeAN.parseDate(datee);
-
+    getSaveAlarms()
+    const hr = moment(date).format('HH') 
+    const min =moment(date).format('mm')
+    const status =false
+    const alarmItem = {hr, min, status}
+    alarms.push(alarmItem)
+    var alarmData ={
+      alarms
+    }
+    storage.save({
+      key:'alarms',
+      data:alarmData,
+      expires:null,
+    })
   };
-  const addAlarm = async(fireDate)=>{
-    console.log('i was here')
-    await ReactNativeAN.scheduleAlarm({ ...alarmNotifData, fire_date: fireDate })
-    console.log('i was here 2')
+  const renderAlarm = ({ item, index }) => {  
+    return (
+      <AlarmTime
+        alarm={item}
+        index={index}
+        onLongPress={(e)=>prompDelete(index)}
+      />
+    );
+  };
+  const prompDelete =(index)=>{
 
-  } 
-  const deleteAlarm = (addAlarm)=>{
-    ReactNativeAN.deleteAlarm(addAlarm.id);
   }
-  const stopAlarm =()=>{
-    ReactNativeAN.stopAlarmSound();
-  }
-  const getAlarm =()=>{
-    const alarms = async()=> await ReactNativeAN.getScheduledAlarms();
-    return alarms
-  }
-  
+  const alarmList = () => {
+    return (
+        <FlatList
+        data={alarms}
+        renderItem={renderAlarm}
+        keyExtractor={(item, index) => index}
+        />
+    );
+  };
+  const toggleSwitch = (index) => {
+    setIsEnabled(previousState => !previousState)
+    var tempAlarms = alarms
+    tempAlarms[index]["status"] = !tempAlarms[index]["status"]
+    setAlarms(tempAlarms)
+    var alarmData ={
+      alarms
+    }
+    storage.save({
+      key:'alarms',
+      data:alarmData,
+      expires:null,
+    })
+  };
+  const AlarmTime = ({ alarm,index, onLongPress }) => (
+  <TouchableOpacity  onLongPress={onLongPress}>
+    <View style={Styles.worldClock}>
+        <View style={Styles.worldClockTime}>
+            <Text style={Styles.worldClockText}>{(alarm['hr']).toString().padStart(2, "0")} :{(alarm['min']).toString().padStart(2, "0")}</Text>
+        </View>
+        {console.log(index,alarm['status'])}
+        <Switch style={{alignSelf:'flex-end'}}
+          trackColor={{ false: "#767577", true: "#f27405" }}
+          thumbColor={alarm['status'] ? "#f27405" : "#f4f3f4"}
+          onValueChange={()=>toggleSwitch(index)}
+          value={alarm['status']}
+        />
+      </View>
+  </TouchableOpacity>
+);
+
+useEffect(()=>{
+  getSaveAlarms()
+}, [alarms, isEnabled])
+  // const addAlarm = async(fireDate)=>{
+  //   console.log('i was here')
+  //   await ReactNativeAN.scheduleAlarm({ ...alarmNotifData, fire_date: fireDate })
+  //   console.log('i was here 2')
+
+  // } 
+  // const deleteAlarm = (addAlarm)=>{
+  //   ReactNativeAN.deleteAlarm(addAlarm.id);
+  // }
+  // const stopAlarm =()=>{
+  //   ReactNativeAN.stopAlarmSound();
+  // }
+  // const getAlarm =()=>{
+  //   const alarms = async()=> await ReactNativeAN.getScheduledAlarms();
+  //   return alarms
+  // }
   return (
     <View style={Styles.container}>
             <View style={Styles.homecontent}>
@@ -63,7 +147,19 @@ export default function Alarm() {
                 <Text style={Styles.text}>Alarm</Text>
             </View>
             {/* alarm list  */}
-            {getAlarm()}
+            {/* <View style={Styles.worldClock}>
+              <View style={Styles.worldClockTime}>
+                  <Text style={Styles.worldClockText}>05:55</Text>
+              </View>
+              <Switch trackColor={{ false: "#767577", true: "#f27405" }}
+              thumbColor={isEnabled ? "#f27405" : "#f4f3f4"}
+              //ios_backgroundColor="#3e3e3e"
+              onValueChange={toggleSwitch}
+              value={isEnabled}
+              />
+            </View> */}
+
+            {alarmList()}
 
         </View>
   )

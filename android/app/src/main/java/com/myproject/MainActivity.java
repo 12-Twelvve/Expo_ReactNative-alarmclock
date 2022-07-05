@@ -25,7 +25,19 @@ public class MainActivity extends ReactActivity {
     setTheme(R.style.AppTheme);
     super.onCreate(null);
   }
-
+// --------------- user defined handle notification intent -------------
+  @Override
+    public void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        try {
+            Bundle bundle = intent.getExtras();
+            if (bundle != null) {
+                JSONObject data = BundleJSONConverter.convertToJSON(bundle);
+                getReactInstanceManager().getCurrentReactContext().getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit("OnNotificationOpened", data.toString());
+            }
+        } catch (Exception e) {
+            System.err.println("Exception when handling notification opened. " + e);
+        }
   /**
    * Returns the name of the main component registered from JavaScript.
    * This is used to schedule rendering of the component.

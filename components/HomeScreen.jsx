@@ -2,32 +2,53 @@ import { View, Text, StyleSheet,  Pressable, Modal, FlatList, TouchableOpacity }
 import React, {useState, useEffect} from 'react'
 import { AntDesign } from '@expo/vector-icons';
 import { country } from './assests/country';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import storage from './Storage';
+// import { Moment } from 'moment';
+var moment = require('moment-timezone');
 
 
 export default function HomeScreen({ navigation }) {
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedId, setSelectedId] = useState(null);
-    const [clocks, setClocks] = useState([]);
+    // const [clockZones, setClockZones] = useState([]);
     const [localHour, setLocalHour] = useState("00");
     const [localMinute, setLocalMinute] = useState("00");
-
-    const handleZoneSelect =async(item)=>{
+    const [zoneIds, setzoneIds] = useState([])
+    const handleZoneSelect =async(zone)=>{
         setModalVisible(false)
-        // get id and offset
-        await AsyncStorage.setItem('clocks', JSON.stringify(item))
-        // localStorage.setItem('clocks', JSON.stringify(item));
+        getSaveZone()
+        console.log("----",zoneIds)
+        zoneIds.push(zone.Id)
+        var zoneData ={
+          zoneIds
+        }
+        storage.save({
+          key:'zones',
+          data:zoneData,
+          expires:null,
+        })
     }
+
     const prompDelete =()=>{
       console.log('deleted')
     }
-    const getSaveWorldClock =async()=>{
-        // const clocks = JSON.parse(localStorage.getItem('clocks'));
-        const clocks = await AsyncStorage.getItem('clocks')
-        if (clocks) {
-        setClocks(clocks);
-        }
+    const getSaveZone =()=>{
+        storage.load({
+          key: 'zones',
+          autoSync: true,
+          syncInBackground: true,
+        })
+        .then(ret => {
+          // success
+          console.log("rettt--",ret.zoneIds);
+          setzoneIds(ret.zoneIds)
+          
+        })
+        .catch(err => {
+          console.warn(err.message);
+        });
     }
+
     const list = () => {
         return (
             <FlatList
@@ -51,13 +72,13 @@ export default function HomeScreen({ navigation }) {
           />
         );
       };
-    const renderWorldClocks = ({ clock }) => {  
-       
-        const d = new Date();
-        time = d.toLocaleString("en-US", {timeZone: clock.Id});
+    const renderWorldClocks = ({ item }) => {  
+        // const d = new Date();
+        const time = moment().tz(item).format("hh:mm")
         return (
           <Worldclock
             clock={time}
+            id={item}
             onLongPress={(e)=>prompDelete(clock)}
           />
         );
@@ -65,37 +86,38 @@ export default function HomeScreen({ navigation }) {
     const worldClockList = () => {
         return (
             <FlatList
-            data={clocks}
+            data={zoneIds}
             renderItem={renderWorldClocks}
-            keyExtractor={(clock) => clock.Id}
+            keyExtractor={(item) => item}
         />
         );
       };
-    const Worldclock = ({ clock, onLongPress }) => (
+
+    const Worldclock = ({ clock, id, onLongPress }) => (
       <TouchableOpacity  onLongPress={onLongPress}>
         <View style={Styles.worldClock}>
           <View style={Styles.worldClockTime}>
-               
-              <Text style={Styles.worldClockText}>{ clock.getHours() }:{ clock.getMinutes() }</Text>
+              <Text style={Styles.worldClockText}>{ clock }</Text>
           </View>
           <Text style={Styles.wctext}>
-              {clock.country}
+              {id}h
           </Text>
         </View>
       </TouchableOpacity>
     );
+    const clearAllData=()=> {
+  }
     useEffect(()=>{
       const interval = setInterval(() => {
         const d =new Date()
-        setLocalHour(d.getHours())
-        setLocalMinute(d.getMinutes())
-        worldClockList()
+        setLocalHour((d.getHours()).toString().padStart(2, "0"))
+        setLocalMinute((d.getMinutes()).toString().padStart(2, "0"))
       }, 1000);
+      getSaveZone()
     }, [])
 
     return (
         <View style={Styles.container}>
-            {/* <BottomNavbar /> */}
             <View style={Styles.homecontent}>
             <Pressable
                 onPress={()=>setModalVisible(true)}
@@ -120,7 +142,7 @@ export default function HomeScreen({ navigation }) {
             </Modal>
 
                 <Text style={Styles.text}>World Clock</Text>
-                {/* */}
+      
                 <View style={Styles.worldClock}>
                     <View style={Styles.worldClockTime}>
                         <Text style={Styles.worldClockText}>{ localHour }:{ localMinute }</Text>
@@ -129,25 +151,23 @@ export default function HomeScreen({ navigation }) {
                         Local Time 
                     </Text>
                 </View>
-                {/* world clock */}
-                {worldClockList}
+                {worldClockList()}
             </View>
+
         </View>
     )
 }
 export const Styles = StyleSheet.create({
     worldClock :{
       marginTop:50,
-      // backgroundColor:'#1B2430',
       width:'100%',
       height:80,
       flexDirection:"row",
       alignContent:'center',
       alignItems:'center',
-      borderBottomColor:'gray',
-      borderBottomWidth:'1'
     },
     worldClockTime:{
+      alignItems:'center',
       width :'45%',
       height:'90%',
       padding:3,
@@ -165,7 +185,6 @@ export const Styles = StyleSheet.create({
       fontFamily: "Roboto",      
     },
     container: {
-        //marginTop: 1,
         backgroundColor: "#1A1A1A",
         color: "white",
         height: "100%",
@@ -177,13 +196,12 @@ export const Styles = StyleSheet.create({
     plus: {
         flexDirection: "row-reverse",
         marginTop: 30,
-        //marginRight: 200,
+
     },
     text: {
         color: "white",
         fontSize: 30,
         fontWeight: "bold",
-        //marginTop: 10,
         fontFamily: "Roboto"
     },
 
@@ -234,7 +252,7 @@ const styles = StyleSheet.create({
     }
   });
 
-  const modalStyle = StyleSheet.create({
+const modalStyle = StyleSheet.create({
     container: {
      flex: 1,
     },

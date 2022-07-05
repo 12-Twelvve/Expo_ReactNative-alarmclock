@@ -1,4 +1,3 @@
-//import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
 import HomeScreen from './components/HomeScreen';
 import { NavigationContainer } from '@react-navigation/native';
@@ -7,9 +6,8 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs"
 import Alarm from './components/Alarm';
 import Modal from './components/Modal';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-// import BottomNavbar from './components/BottomNavbar';
 import StopTimer from './components/StopTimer';
-//import BottomTab from './components/BottomTab';
+
 
 
 const Tab = createBottomTabNavigator();

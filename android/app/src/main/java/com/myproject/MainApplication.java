@@ -40,7 +40,7 @@ public class MainApplication extends Application implements ReactApplication {
       packages.add(new ANPackage());
       return packages;
     }
-
+    
     @Override
     protected String getJSMainModuleName() {
       return "index";
