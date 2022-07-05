@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs"
 import Alarm from './components/Alarm';
-import Modal from './components/Modal';
+// import Modal from './components/Modal';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import StopTimer from './components/StopTimer';
 
@@ -58,9 +58,9 @@ export default function App() {
             <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }}/>
 
 
-           <Stack.Group screenOptions={{ presentation: "modal" }}>
+           {/* <Stack.Group screenOptions={{ presentation: "modal" }}>
             <Stack.Screen name="Modal" component={Modal} options={{ headerShown: false }} />
-          </Stack.Group> 
+          </Stack.Group>  */}
         </Stack.Navigator>
         {/* <BottomTab /> */}
       </NavigationContainer>

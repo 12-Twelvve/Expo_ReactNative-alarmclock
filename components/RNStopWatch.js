@@ -60,5 +60,5 @@ const options = {
   }
 };
 
-AppRegistry.registerComponent('RStopWatch', () => RNStopWatch);
+AppRegistry.registerComponent('RNStopWatch', () => RNStopWatch);
 export default RNStopWatch

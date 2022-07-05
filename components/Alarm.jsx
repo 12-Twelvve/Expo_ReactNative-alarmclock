@@ -6,6 +6,7 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from 'moment';
 import {Switch} from '@rneui/themed'
 import storage from './Storage';
+import { Audio } from 'expo-av';
 // import AsyncStorage from '@react-native-async-storage/async-storage';
 // import ReactNativeAN from 'react-native-alarm-notification';
 
@@ -40,6 +41,11 @@ export default function Alarm() {
       console.warn(err.message);
     });
 }
+  const removeStorage =()=>{
+    storage.remove({
+      key: 'alarms'
+    });
+  }
   const handleConfirm = async(date) => {
     hideTimePicker();
     getSaveAlarms()
@@ -108,10 +114,57 @@ export default function Alarm() {
       </View>
   </TouchableOpacity>
 );
+// play sound   ---------------------------
+const [sound, setSound] = useState();
+const [play, setPlay] = useState(false)
+const checkAlarm =()=>{
+  const dt = new Date()
+  const hr = moment(dt).format('HH') 
+  const min =moment(dt).format('mm')
+  alarms.map((al)=>{
+    if (!play){
+      if (al['status']){
+        if (al['hr'] ==hr){
+          if (al['min']==min){
+            setPlay(true)
+            playSound()
+          }
+        }
+      }
+    }
+  })
+}
+async function playSound() {
+  console.log('Loading Sound');
+  const { sound } = await Audio.Sound.createAsync(
+     require('./assests/sound.mp3')
+  );
+  setSound(sound);
+  console.log('Playing Sound');
+    await sound.playAsync(); 
+}
+
+useEffect(() => {
+  return sound
+    ? () => {
+        console.log('Unloading Sound');
+        sound.unloadAsync(); 
+        setPlay(false)
+      }
+    : undefined;
+}, [sound]);
+// ----------------------------------------
 
 useEffect(()=>{
   getSaveAlarms()
+  const interval = setInterval(() => {
+    checkAlarm()
+    // for every 30 sec
+  }, 30000);
+  // removeStorage()
 }, [alarms, isEnabled])
+
+
   // const addAlarm = async(fireDate)=>{
   //   console.log('i was here')
   //   await ReactNativeAN.scheduleAlarm({ ...alarmNotifData, fire_date: fireDate })
