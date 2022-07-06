@@ -10,9 +10,12 @@ class RNStopWatch extends Component {
     this.state = {
       stopwatchStart: false,
       stopwatchReset: false,
+      laps:[],
+     
     };
     this.toggleStopwatch = this.toggleStopwatch.bind(this);
     this.resetStopwatch = this.resetStopwatch.bind(this);
+    this.lapStopwatch = this.lapStopwatch.bind(this);
   };
   toggleStopwatch() {
     this.setState({stopwatchStart: !this.state.stopwatchStart, stopwatchReset: false});
@@ -20,45 +23,64 @@ class RNStopWatch extends Component {
   resetStopwatch() {
     this.setState({stopwatchStart: false, stopwatchReset: true});
   };
-  getFormattedTime(time){
-      this.currentTime = time;
+  lapStopwatch() {
+    // state.push(time)
+    this.setState({stopwatchStart: false, stopwatchReset: true});
   };
+  getFormattedTime(){
+    const d = new Date();
+    let time = d.getTime()
+    this.currentTime = time;
+  };
+
 
   render() {
     return (
-      <View>
+      <View >
         <Stopwatch  start={this.state.stopwatchStart}
           msecs
           reset={this.state.stopwatchReset}
-          options={options}
+          laps={true}
+          startTime={0}
+          // options={{startTime:0, laps:true}}
           getTime={this.getFormattedTime} />
-        <TouchableHighlight onPress={this.toggleStopwatch}>
-              {this.state.stopwatchStart?
-              ( <Ionicons name="stop-circle" size={50} color="#F27405" />)
-               :
-              ( <Ionicons name="play" size={50} color="#F27405" />)
+        <View style={styles.centeredIcon}>
+          <TouchableHighlight onPress={this.toggleStopwatch}>
+                {this.state.stopwatchStart?
+                ( <Ionicons name="stop-circle" size={50} color="#F27405" />)
+                :
+                ( <Ionicons name="play" size={50} color="#F27405" />)
               }
-        </TouchableHighlight>
-        <TouchableHighlight onPress={this.resetStopwatch}>
-              <Ionicons name="reload-circle" size={50} color="#F27405" />
-        </TouchableHighlight>
+          </TouchableHighlight>
+          <TouchableHighlight onPress={this.resetStopwatch}>
+                <Ionicons name="reload-circle" size={50} color="#F27405" />
+          </TouchableHighlight>
+          <TouchableHighlight onPress={this.lapStopWatch}>
+            <Ionicons name="timer" size={50} color="#F27405" />
+          </TouchableHighlight>
+        </View>
+        <View>
+            {/* laps */}
+        </View>
       </View>
     );
   }
 }
-const options = {
-  container: {
-    backgroundColor: '#000',
-    padding: 5,
-    borderRadius: 5,
-    width: 220,
+const styles = StyleSheet.create({
+  centeredIcon: {
+    flex: 1,
+    justifyContent: "space-around",
+    alignItems: "center",
+    marginTop: 22
   },
-  text: {
-    fontSize: 30,
-    color: '#FFF',
-    marginLeft: 7,
-  }
-};
 
+});
+const Laps =(clock)=>{
+  return(
+    <View>
+      <Text>{ clock }</Text>
+    </View>
+  )
+}
 AppRegistry.registerComponent('RNStopWatch', () => RNStopWatch);
 export default RNStopWatch
