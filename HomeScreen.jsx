@@ -2,7 +2,7 @@ import { View, Text, StyleSheet,  Pressable, Modal, FlatList, TouchableOpacity }
 import React, {useState, useEffect} from 'react'
 import { AntDesign } from '@expo/vector-icons';
 import { country } from './assests/country';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import storage from './Storage';
 // import { Moment } from 'moment';
 var moment = require('moment-timezone');
 
@@ -10,32 +10,43 @@ var moment = require('moment-timezone');
 export default function HomeScreen({ navigation }) {
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedId, setSelectedId] = useState(null);
-    const [clockZones, setClockZones] = useState([]);
+    // const [clockZones, setClockZones] = useState([]);
     const [localHour, setLocalHour] = useState("00");
     const [localMinute, setLocalMinute] = useState("00");
-
+    const [zoneIds, setzoneIds] = useState([])
     const handleZoneSelect =async(zone)=>{
-        console.log(zone.Id)
         setModalVisible(false)
-        // const clocksStorage = await AsyncStorage.getItem('clocks')
-        // if (clocksStorage != null){
-        //   setClockZones(clocksStorage)
-        //   setClockZones([...zone])
-        // }else{
-        // }
-        setClockZones([...clockZones, zone.Id])
- 
-        // await AsyncStorage.setItem('clocks', JSON.stringify(clocksStorage))
+        getSaveZone()
+        console.log("----",zoneIds)
+        zoneIds.push(zone.Id)
+        var zoneData ={
+          zoneIds
+        }
+        storage.save({
+          key:'zones',
+          data:zoneData,
+          expires:null,
+        })
     }
 
     const prompDelete =()=>{
       console.log('deleted')
     }
-    const getSaveWorldClock =async()=>{
-        const clocksStorage = await AsyncStorage.getItem('clocks')
-        if (clocksStorage != null) {
-        setClockZones(clocksStorage);
-        }
+    const getSaveZone =()=>{
+        storage.load({
+          key: 'zones',
+          autoSync: true,
+          syncInBackground: true,
+        })
+        .then(ret => {
+          // success
+          console.log("rettt--",ret.zoneIds);
+          setzoneIds(ret.zoneIds)
+          
+        })
+        .catch(err => {
+          console.warn(err.message);
+        });
     }
 
     const list = () => {
@@ -61,14 +72,9 @@ export default function HomeScreen({ navigation }) {
           />
         );
       };
-
     const renderWorldClocks = ({ item }) => {  
         // const d = new Date();
-        console.log(clockZones)
         const time = moment().tz(item).format("hh:mm")
-        console.log(time)
-        console.log("zn"+ item)
-        // getSaveWorldClock()
         return (
           <Worldclock
             clock={time}
@@ -80,7 +86,7 @@ export default function HomeScreen({ navigation }) {
     const worldClockList = () => {
         return (
             <FlatList
-            data={clockZones}
+            data={zoneIds}
             renderItem={renderWorldClocks}
             keyExtractor={(item) => item}
         />
@@ -100,18 +106,14 @@ export default function HomeScreen({ navigation }) {
       </TouchableOpacity>
     );
     const clearAllData=()=> {
-      AsyncStorage.getAllKeys()
-          .then(keys => AsyncStorage.multiRemove(keys))
-          .then(() => alert('success'));
   }
     useEffect(()=>{
       const interval = setInterval(() => {
         const d =new Date()
         setLocalHour((d.getHours()).toString().padStart(2, "0"))
         setLocalMinute((d.getMinutes()).toString().padStart(2, "0"))
-        // worldClockList()
       }, 1000);
-      // clearAllData()
+      getSaveZone()
     }, [])
 
     return (
@@ -250,7 +252,7 @@ const styles = StyleSheet.create({
     }
   });
 
-  const modalStyle = StyleSheet.create({
+const modalStyle = StyleSheet.create({
     container: {
      flex: 1,
     },
