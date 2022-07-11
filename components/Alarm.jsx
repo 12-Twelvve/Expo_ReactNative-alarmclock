@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, Modal , Pressable, FlatList, TouchableOpacity} from 'react-native'
+import { View, Text, StyleSheet, Modal , Pressable, FlatList, TouchableOpacity,  TouchableWithoutFeedback,} from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { Styles } from './HomeScreen'
 import { AntDesign } from '@expo/vector-icons';
@@ -7,13 +7,18 @@ import moment from 'moment';
 import {Switch} from '@rneui/themed'
 import storage from './Storage';
 import { Audio } from 'expo-av';
+import { Ionicons } from '@expo/vector-icons';
+
 // import AsyncStorage from '@react-native-async-storage/async-storage';
 // import ReactNativeAN from 'react-native-alarm-notification';
 
 export default function Alarm() {
+  const [deleteRender, setDeleteRender] = useState(false)
   const [isEnabled, setIsEnabled] = useState(false);
   const [alarms, setAlarms] = useState([])
   const [isTimePickerVisible, setTimePickerVisibility] = useState(false);
+  const [isOpen, setIsOpen] = useState(false)
+  const [dindex, setdIndex] = useState('')
   const showTimePicker = () => {
     setTimePickerVisibility(true);
   };
@@ -34,11 +39,7 @@ export default function Alarm() {
       console.warn(err.message);
     });
 }
-  const removeStorage =()=>{
-    storage.remove({
-      key: 'alarms'
-    });
-  }
+ 
   const handleConfirm = async(date) => {
     hideTimePicker();
     getSaveAlarms()
@@ -61,11 +62,28 @@ export default function Alarm() {
       <AlarmTime
         alarm={item}
         index={index}
-        onLongPress={(e)=>prompDelete(index)}
+        onPress={(e)=>handleDeleteModal(index)}
       />
     );
   };
-  const prompDelete =(index)=>{
+  const handleDeleteModal =(index)=>{
+    setIsOpen(true)
+    setdIndex(index)
+  }
+  const prompDelete =()=>{
+    setDeleteRender(!deleteRender)
+    setIsOpen(false)
+    var tempAlarms = alarms
+    var removed = tempAlarms.splice(dindex,1)
+    var alarmData ={
+      alarms:tempAlarms
+    }
+    setAlarms(tempAlarms)
+    storage.save({
+      key:'alarms',
+      data:alarmData,
+      expires:null,
+    })
   }
   const alarmList = () => {
     return (
@@ -90,20 +108,25 @@ export default function Alarm() {
       expires:null,
     })
   };
-  const AlarmTime = ({ alarm,index, onLongPress }) => (
-  <TouchableOpacity  onLongPress={onLongPress}>
+  const AlarmTime = ({ alarm,index, onPress }) => (
+  <TouchableOpacity  >
     <View style={Styles.worldClock}>
-        <View style={Styles.worldClockTime}>
-            <Text style={Styles.worldClockText}>{(alarm['hr']).toString().padStart(2, "0")} :{(alarm['min']).toString().padStart(2, "0")}</Text>
-        </View>
+      <View style={Styles.worldClockTime}>
+          <Text style={Styles.worldClockText}>{(alarm['hr']).toString().padStart(2, "0")} :{(alarm['min']).toString().padStart(2, "0")}</Text>
+      </View>
         {console.log(index,alarm['status'])}
-        <Switch style={{alignSelf:'flex-end'}}
+      <Switch style={{alignSelf:'flex-end'}}
           trackColor={{ false: "#767577", true: "#f27405" }}
           thumbColor={alarm['status'] ? "#f27405" : "#f4f3f4"}
           onValueChange={()=>toggleSwitch(index)}
           value={alarm['status']}
-        />
+      />
+      <View style={{marginRight:22}}>
+        <Pressable onPress={onPress}>
+          <Ionicons name="remove-circle-outline" size={25} color="gray" />
+        </Pressable>
       </View>
+    </View>
   </TouchableOpacity>
 );
 // play sound   ---------------------------
@@ -115,14 +138,12 @@ const checkAlarm =()=>{
   const min =moment(dt).format('mm')
   alarms.map((al)=>{
     if (!play){
-      if (al['status']){
-        if (al['hr'] ==hr){
-          if (al['min']==min){
+      if (al['status'] && al['hr']==hr && al['min']==min){
+        // if (al['hr'] ==hr){
+        //   if (al['min']==min){
             setPlay(true)
             playSound()
           }
-        }
-      }
     }
   })
 }
@@ -145,34 +166,15 @@ useEffect(() => {
       }
     : undefined;
 }, [sound]);
-// ----------------------------------------
 
 useEffect(()=>{
+  console.log('------')
   getSaveAlarms()
   const interval = setInterval(() => {
     checkAlarm()
-    // for every 30 sec
   }, 30000);
-  // removeStorage()
-}, [alarms, isEnabled])
+})
 
-
-  // const addAlarm = async(fireDate)=>{
-  //   console.log('i was here')
-  //   await ReactNativeAN.scheduleAlarm({ ...alarmNotifData, fire_date: fireDate })
-  //   console.log('i was here 2')
-
-  // } 
-  // const deleteAlarm = (addAlarm)=>{
-  //   ReactNativeAN.deleteAlarm(addAlarm.id);
-  // }
-  // const stopAlarm =()=>{
-  //   ReactNativeAN.stopAlarmSound();
-  // }
-  // const getAlarm =()=>{
-  //   const alarms = async()=> await ReactNativeAN.getScheduledAlarms();
-  //   return alarms
-  // }
   return (
     <View style={Styles.container}>
             <View style={Styles.homecontent}>
@@ -191,20 +193,31 @@ useEffect(()=>{
                 />
                 <Text style={Styles.text}>Alarm</Text>
             </View>
-            {/* alarm list  */}
-            {/* <View style={Styles.worldClock}>
-              <View style={Styles.worldClockTime}>
-                  <Text style={Styles.worldClockText}>05:55</Text>
-              </View>
-              <Switch trackColor={{ false: "#767577", true: "#f27405" }}
-              thumbColor={isEnabled ? "#f27405" : "#f4f3f4"}
-              //ios_backgroundColor="#3e3e3e"
-              onValueChange={toggleSwitch}
-              value={isEnabled}
-              />
-            </View> */}
-
             {alarmList()}
+            <Modal 
+            animationType="slide"
+            transparent={true}
+            visible={isOpen}
+            onRequestClose={() => {
+              setIsOpen(false);
+            }}
+            >
+          <TouchableWithoutFeedback onPress={()=>{setIsOpen(false)}}>
+            <View style={sty.modalOverlay} />
+          </TouchableWithoutFeedback>
+
+          <View style={sty.centeredView}>
+          <View style={sty.modalView}>
+              <Text style={sty.modalText}>Confirm Delete</Text>
+            <Pressable
+              style={[sty.button, sty.buttonClose]}
+              onPress={prompDelete}
+            >
+              <Text style={sty.textStyle}>Delete</Text>
+            </Pressable>
+          </View>
+        </View>
+        </Modal>
 
         </View>
   )
@@ -243,6 +256,58 @@ const styles = StyleSheet.create({
   },
   buttonClose: {
     backgroundColor: "#2196F3",
+  },
+  textStyle: {
+    color: "white",
+    fontWeight: "bold",
+    textAlign: "center"
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: "center"
+  }
+});
+
+const sty = StyleSheet.create({
+  centeredView: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 22
+  },
+  modalView: {
+    margin: 20,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5
+  },
+  modalOverlay: {
+    position: 'absolute',
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)'
+  },
+  button: {
+    borderRadius: 20,
+    padding: 10,
+    elevation: 2
+  },
+  buttonOpen: {
+    backgroundColor: "red",
+  },
+  buttonClose: {
+    backgroundColor: "red",
   },
   textStyle: {
     color: "white",

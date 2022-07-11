@@ -153,7 +153,6 @@ export default function HomeScreen({ navigation }) {
                 </View>
                 {worldClockList()}
             </View>
-
         </View>
     )
 }
@@ -165,6 +164,7 @@ export const Styles = StyleSheet.create({
       flexDirection:"row",
       alignContent:'center',
       alignItems:'center',
+      justifyContent:'space-between',
     },
     worldClockTime:{
       alignItems:'center',
