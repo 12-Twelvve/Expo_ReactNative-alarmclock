@@ -1,16 +1,13 @@
 import { View, Text,StyleSheet, TouchableHighlight } from 'react-native'
 import React, {useState} from 'react'
-import StopWatchv2 from './StopWatchv2';
-
 import Timerv2 from './Timerv2';
 
-export default function StopTimer() {
+export default function TimerStop() {
 
     return (
         <View style={styles.container}>
-            <Text style={{color:"white", fontSize:30}}>StopWatch</Text>
-            <StopWatchv2/>
-            {/* <Timerv2/> */}
+            <Text style={{color:"white", fontSize:30}}>Timer</Text>
+            <Timerv2/>
         </View>
     )
 }

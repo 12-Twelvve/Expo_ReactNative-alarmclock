@@ -7,6 +7,8 @@ import Alarm from './components/Alarm';
 // import Modal from './components/Modal';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import StopTimer from './components/StopTimer';
+import { Timer } from 'react-native-stopwatch-timer';
+import TimerStop from './components/TimerStop';
 
 
 
@@ -17,7 +19,6 @@ function BottomTab() {
     <Tab.Navigator screenOptions={({ route }) => ({
       tabBarIcon: ({ focused, color, size }) => {
         let iconName;
-
         if (route.name === 'World Clock') {
           iconName = focused
             ? 'globe'
@@ -26,6 +27,9 @@ function BottomTab() {
           iconName = focused ? 'alarm' : 'alarm-outline';
         }
         else if (route.name === 'Stop Watch') {
+          iconName = focused ? 'stopwatch' : 'stopwatch-outline';
+        }
+        else if (route.name === 'Timer') {
           iconName = focused ? 'timer' : 'timer-outline';
         }
 
@@ -44,6 +48,7 @@ function BottomTab() {
       <Tab.Screen name="World Clock" component={HomeScreen} />
       <Tab.Screen name="Alarm" component={Alarm} />
       <Tab.Screen name="Stop Watch" component={StopTimer} />
+      <Tab.Screen name="Timer" component={TimerStop} />
     </Tab.Navigator>
   )
 }
@@ -56,13 +61,7 @@ export default function App() {
         <Stack.Navigator >
           <Stack.Screen name="BottomTab" component={BottomTab}  options={{ headerShown: false }}/>
             <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }}/>
-
-
-           {/* <Stack.Group screenOptions={{ presentation: "modal" }}>
-            <Stack.Screen name="Modal" component={Modal} options={{ headerShown: false }} />
-          </Stack.Group>  */}
         </Stack.Navigator>
-        {/* <BottomTab /> */}
       </NavigationContainer>
 
     </>

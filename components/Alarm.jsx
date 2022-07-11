@@ -20,14 +20,7 @@ export default function Alarm() {
   const hideTimePicker = () => {
     setTimePickerVisibility(false);
   };  
-  const alarmNotifData = {
-    title: "Alarm",
-    message: "wake up",
-    channel: "my_channel_id",
-	  small_icon: "ic_launcher",
-    color:"red",
 
-  };
   const getSaveAlarms =()=>{
     storage.load({
       key: 'alarms',
@@ -73,7 +66,6 @@ export default function Alarm() {
     );
   };
   const prompDelete =(index)=>{
-
   }
   const alarmList = () => {
     return (

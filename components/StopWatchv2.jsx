@@ -1,9 +1,8 @@
 import { StyleSheet,Text,View, TouchableHighlight } from 'react-native';
 import { Stopwatch } from 'react-native-stopwatch-timer';
 import { Ionicons } from '@expo/vector-icons';
-
 import React, {useEffect, useState} from 'react'
-import LocaleProvider from 'antd/lib/locale-provider';
+
 
 const StopWatchv2 = () => {
     const [stopwatchStart, setstopwatchStart] = useState(false)
@@ -17,6 +16,7 @@ const StopWatchv2 = () => {
     const resetStopWatch =()=>{
         setstopwatchStart(false)
         setstopwatchReset(true)
+        setLaps([])
     }
     const lapStopWatch=()=>{
       setLaps([...laps, currentTime])
@@ -26,9 +26,6 @@ const StopWatchv2 = () => {
     }
     useEffect(()=>{
       console.log(laps)
-      if (stopwatchReset){
-        setLaps([])
-      }
     },[laps])
   return (
     <View style={styles.box}>
@@ -52,7 +49,7 @@ const StopWatchv2 = () => {
                 <Ionicons name="reload-circle" size={50} color="#F27405" />
           </TouchableHighlight>
           <TouchableHighlight onPress={lapStopWatch}>
-            <Ionicons name="timer" size={50} color="#F27405" />
+            <Ionicons name="stopwatch" size={50} color="#F27405" />
           </TouchableHighlight>
         </View>
         <View style={styles.laps}>
