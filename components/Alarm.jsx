@@ -9,9 +9,6 @@ import storage from './Storage';
 import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 
-// import AsyncStorage from '@react-native-async-storage/async-storage';
-// import ReactNativeAN from 'react-native-alarm-notification';
-
 export default function Alarm() {
   const [deleteRender, setDeleteRender] = useState(false)
   const [isEnabled, setIsEnabled] = useState(false);

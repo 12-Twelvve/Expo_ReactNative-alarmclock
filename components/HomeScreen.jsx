@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet,  Pressable, Modal, FlatList, TouchableOpacity } from 'react-native'
+import { View, Text, StyleSheet,  Pressable, Modal, FlatList, TouchableOpacity, TouchableWithoutFeedback } from 'react-native'
 import React, {useState, useEffect} from 'react'
 import { AntDesign } from '@expo/vector-icons';
 import { country } from './assests/country';
@@ -10,14 +10,15 @@ var moment = require('moment-timezone');
 export default function HomeScreen({ navigation }) {
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedId, setSelectedId] = useState(null);
-    // const [clockZones, setClockZones] = useState([]);
+    const [isOpenDelete, setIsOpenDelete] = useState(false)
     const [localHour, setLocalHour] = useState("00");
     const [localMinute, setLocalMinute] = useState("00");
     const [zoneIds, setzoneIds] = useState([])
+    const [dindex, setdIndex] = useState('')
+
     const handleZoneSelect =async(zone)=>{
         setModalVisible(false)
         getSaveZone()
-        console.log("----",zoneIds)
         zoneIds.push(zone.Id)
         var zoneData ={
           zoneIds
@@ -28,9 +29,9 @@ export default function HomeScreen({ navigation }) {
           expires:null,
         })
     }
-
-    const prompDelete =()=>{
-      console.log('deleted')
+    const prompDelete =(index)=>{
+      setIsOpenDelete(true)
+      setdIndex(index)
     }
     const getSaveZone =()=>{
         storage.load({
@@ -40,7 +41,6 @@ export default function HomeScreen({ navigation }) {
         })
         .then(ret => {
           // success
-          console.log("rettt--",ret.zoneIds);
           setzoneIds(ret.zoneIds)
           
         })
@@ -48,7 +48,6 @@ export default function HomeScreen({ navigation }) {
           console.warn(err.message);
         });
     }
-
     const list = () => {
         return (
             <FlatList
@@ -72,14 +71,14 @@ export default function HomeScreen({ navigation }) {
           />
         );
       };
-    const renderWorldClocks = ({ item }) => {  
+    const renderWorldClocks = ({ item, index }) => {  
         // const d = new Date();
         const time = moment().tz(item).format("hh:mm")
         return (
           <Worldclock
             clock={time}
             id={item}
-            onLongPress={(e)=>prompDelete(clock)}
+            onLongPress={(e)=>prompDelete(index)}
           />
         );
       };
@@ -88,7 +87,7 @@ export default function HomeScreen({ navigation }) {
             <FlatList
             data={zoneIds}
             renderItem={renderWorldClocks}
-            keyExtractor={(item) => item}
+            keyExtractor={(item, index) => item}
         />
         );
       };
@@ -100,12 +99,26 @@ export default function HomeScreen({ navigation }) {
               <Text style={Styles.worldClockText}>{ clock }</Text>
           </View>
           <Text style={Styles.wctext}>
-              {id}h
+              {id}
           </Text>
         </View>
       </TouchableOpacity>
     );
     const clearAllData=()=> {
+  }
+  const deleteWorldZone =()=>{
+    setIsOpenDelete(false)
+    var tempZones = zoneIds
+    var deletedDat = tempZones.splice(dindex, 1)
+    var zoneData ={
+      zoneIds:tempZones
+    }
+    storage.save({
+      key:'zones',
+      data:zoneData,
+      expires:null,
+    })
+    setzoneIds(tempZones)
   }
     useEffect(()=>{
       const interval = setInterval(() => {
@@ -114,7 +127,7 @@ export default function HomeScreen({ navigation }) {
         setLocalMinute((d.getMinutes()).toString().padStart(2, "0"))
       }, 1000);
       getSaveZone()
-    }, [])
+    })
 
     return (
         <View style={Styles.container}>
@@ -133,7 +146,11 @@ export default function HomeScreen({ navigation }) {
                 onRequestClose={() => {
                 setModalVisible(!modalVisible);
                 }}
-            >
+              >
+                 <TouchableWithoutFeedback onPress={()=>{setModalVisible(false)}}>
+                  <View style={sty.modalOverlay} />
+                 </TouchableWithoutFeedback>
+
                 <View style={styles.centeredView}>
                 <View style={styles.modalView}>
                     {list()}    
@@ -142,7 +159,6 @@ export default function HomeScreen({ navigation }) {
             </Modal>
 
                 <Text style={Styles.text}>World Clock</Text>
-      
                 <View style={Styles.worldClock}>
                     <View style={Styles.worldClockTime}>
                         <Text style={Styles.worldClockText}>{ localHour }:{ localMinute }</Text>
@@ -152,6 +168,31 @@ export default function HomeScreen({ navigation }) {
                     </Text>
                 </View>
                 {worldClockList()}
+                {/* delete modal */}
+                <Modal 
+                  animationType="slide"
+                  transparent={true}
+                  visible={isOpenDelete}
+                  onRequestClose={() => {
+                    setIsOpenDelete(false);
+                  }}
+                  >
+                <TouchableWithoutFeedback onPress={()=>{setIsOpenDelete(false)}}>
+                  <View style={sty.modalOverlay} />
+                </TouchableWithoutFeedback>
+
+                <View style={sty.centeredView}>
+                <View style={sty.modalView}>
+                    <Text style={sty.modalText}>Confirm Delete</Text>
+                  <Pressable
+                    style={[sty.button, sty.buttonClose]}
+                    onPress={deleteWorldZone}
+                  >
+                    <Text style={sty.textStyle}>Delete</Text>
+                  </Pressable>
+                </View>
+              </View>
+            </Modal>
             </View>
         </View>
     )
@@ -266,5 +307,58 @@ const modalStyle = StyleSheet.create({
     itemBox: {
         borderBottomWidth: 0.2,
         borderBottomColor:'gray',
+    }
+  });
+
+
+  const sty = StyleSheet.create({
+    centeredView: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      marginTop: 22
+    },
+    modalView: {
+      margin: 20,
+      backgroundColor: "white",
+      borderRadius: 20,
+      padding: 35,
+      alignItems: "center",
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: 2
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 5
+    },
+    modalOverlay: {
+      position: 'absolute',
+      top: 0,
+      bottom: 0,
+      left: 0,
+      right: 0,
+      backgroundColor: 'rgba(0,0,0,0.5)'
+    },
+    button: {
+      borderRadius: 20,
+      padding: 10,
+      elevation: 2
+    },
+    buttonOpen: {
+      backgroundColor: "red",
+    },
+    buttonClose: {
+      backgroundColor: "red",
+    },
+    textStyle: {
+      color: "white",
+      fontWeight: "bold",
+      textAlign: "center"
+    },
+    modalText: {
+      marginBottom: 15,
+      textAlign: "center"
     }
   });
