@@ -9,6 +9,15 @@ import storage from './Storage';
 import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 
+// for nfc reader ---------------------------------------------
+import NfcManager, {NfcTech} from 'react-native-nfc-manager';
+
+// import TrackPlayer , {Capability} from 'react-native-track-player';
+// import { useCurrentTrack } from './services/UseCurrentTrack';
+// import { SetupService, QueueInitalTracksService } from './services/SetServices';
+
+NfcManager.start();
+// ----------------------------------------------
 export default function Alarm() {
   const [deleteRender, setDeleteRender] = useState(false)
   const [isEnabled, setIsEnabled] = useState(false);
@@ -36,7 +45,6 @@ export default function Alarm() {
       console.warn(err.message);
     });
 }
- 
   const handleConfirm = async(date) => {
     hideTimePicker();
     getSaveAlarms()
@@ -126,6 +134,48 @@ export default function Alarm() {
     </View>
   </TouchableOpacity>
 );
+
+// =======================================
+// another playCard
+// const playTrack =()=>{
+//   const track = useCurrentTrack();
+// }
+// const [isPlayerReady, setIsPlayerReady] = useState(false);
+// useEffect(() => { 
+//   async function run() {
+//     const isSetup = await SetupService();
+//     setIsPlayerReady(isSetup);
+
+//     const queue = await TrackPlayer.getQueue();
+//     if (isSetup && queue.length <= 0) {
+//       await QueueInitalTracksService();
+//     }
+//   }
+//   run();
+// }, []);
+
+//  play sound by react native audio track
+// const playAudioTrack = async()=>{
+//   await TrackPlayer.setupPlayer()
+//   const track = {
+//     url: require('./assests/sound.mp3'),
+//     title: 'Alarm',
+//     artist: 'deadman',
+//     duration: 166
+//     };
+//   await TrackPlayer.add([track]);
+//   TrackPlayer.updateOptions({
+//         capabilities: [
+//             Capability.Play,
+//             Capability.Stop,
+//         ],
+//         // compactCapabilities: [Capability.Play, Capability.Stop],
+//     });
+//   TrackPlayer.play();
+// }
+// const stopAudioTrack =()=>{
+//       TrackPlayer.stop()
+// }
 // play sound   ---------------------------
 const [sound, setSound] = useState();
 const [play, setPlay] = useState(false)
@@ -136,24 +186,62 @@ const checkAlarm =()=>{
   alarms.map((al)=>{
     if (!play){
       if (al['status'] && al['hr']==hr && al['min']==min){
-        // if (al['hr'] ==hr){
-        //   if (al['min']==min){
             setPlay(true)
             playSound()
+            // playAudioTrack()
           }
     }
   })
 }
 async function playSound() {
+  try{
+    const permission = await Audio.requestPermissionsAsync();
+  }catch(err){
+    console.log(err)
+  }
   console.log('Loading Sound');
+  Audio.setAudioModeAsync({
+    // allowsRecordingIOS: false,
+    staysActiveInBackground: true,
+    playsInBackgroundModeAndroid: true,
+    // interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DUCK_OTHERS,
+    // playsInSilentModeIOS: true,
+    shouldDuckAndroid: true,
+    interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DUCK_OTHERS,
+    playThroughEarpieceAndroid: false
+    });
   const { sound } = await Audio.Sound.createAsync(
      require('./assests/sound.mp3')
   );
   setSound(sound);
   console.log('Playing Sound');
     await sound.playAsync(); 
+    await sound.setIsLoopingAsync(true)
 }
+async function stopSound(){
+  console.log('stopping sound')
+  await sound.stopAsync()
+  sound.unloadAsync(); 
+  setPlay(false)
+}
+// stop sound by nfc ----------------------
+async function readNdef() {
+  try {
+    // register for the NFC tag with NDEF in it
+    await NfcManager.requestTechnology(NfcTech.Ndef);
+    // the resolved tag object will contain `ndefMessage` property
+    const tag = await NfcManager.getTag();
+    console.warn('Tag found', tag);
+    // stop alarm function -------
+    stopSound()
 
+  } catch (ex) {
+    console.warn('Oops!', ex);
+  } finally {
+    // stop the nfc scanning
+    NfcManager.cancelTechnologyRequest();
+  }
+}
 useEffect(() => {
   return sound
     ? () => {
@@ -165,13 +253,15 @@ useEffect(() => {
 }, [sound]);
 
 useEffect(()=>{
-  console.log('------')
   getSaveAlarms()
   const interval = setInterval(() => {
     checkAlarm()
   }, 30000);
 })
-
+setInterval(() => {
+  // check nfc
+  // readNdef()
+}, 1000);
   return (
     <View style={Styles.container}>
             <View style={Styles.homecontent}>
@@ -215,7 +305,9 @@ useEffect(()=>{
           </View>
         </View>
         </Modal>
-
+        {/* <Pressable onPress={stopSound}>
+        <Ionicons name="stop-circle-outline" size={24} color="red" />
+        </Pressable> */}
         </View>
   )
 }

@@ -150,7 +150,6 @@ export default function HomeScreen({ navigation }) {
                  <TouchableWithoutFeedback onPress={()=>{setModalVisible(false)}}>
                   <View style={sty.modalOverlay} />
                  </TouchableWithoutFeedback>
-
                 <View style={styles.centeredView}>
                 <View style={styles.modalView}>
                     {list()}    
